@@ -1,4 +1,6 @@
 Rails.application.routes.draw do
-  resources :trains, defaults: {format: 'json'}, only: [:index, :show]
-  resources :stops, defaults: {format: 'json'}, only: [:index, :show]
+  namespace :api, defaults: {format: 'json'} do
+    resources :trains, only: [:index, :show]
+    resources :stops, only: [:index, :show]
+  end
 end

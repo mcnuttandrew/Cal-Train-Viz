@@ -1,4 +1,4 @@
-class StopsController < ApplicationController
+class Api::StopsController < ApplicationController
   def index
     stops = Stop.all
     render json: stops

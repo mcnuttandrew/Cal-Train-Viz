@@ -1,4 +1,4 @@
-class TrainsController < ApplicationController
+class Api::TrainsController < ApplicationController
   def index
     trains = Train.all
     render json: trains
