@@ -12,13 +12,15 @@ end
 
 train_numbers = times.keys
 train_numbers.each do |train|
-  cur_train = Train.create!({id_number: train})
+  dir = ( train.to_i % 2 === 1 ? "northbound" : "southbound")
+  tt = train.to_i / 100
+  cur_train = Train.create!({id_number: train, train_type: tt, direction: dir})
   train_times = times[train]
   train_times.each do |stop_id, time|
     TimeLocation.create!({
-                          stop_id: stop_id, 
-                          train_id: cur_train.id, 
-                          time: time 
+                            stop_id: stop_id, 
+                            train_id: cur_train.id, 
+                            time: time 
                           })
   end
 end
