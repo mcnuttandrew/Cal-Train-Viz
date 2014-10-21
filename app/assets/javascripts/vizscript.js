@@ -64,15 +64,17 @@
 					}
 					if(trainPath.length > 1){
 						// for(var i= 0; i < train.time_stops; i++){console.log(train.time_stops[i])}
-						var color = "red";
-						if(train.direction === "southbound"){
+						var color = "black";
+						if(train.train_type === 2){
 							color = "blue"
+						} else if (train.train_type === 3) {
+							color = "#7A0000"
 						}
 						
 						svg.append("path")
 							.attr("d", lineFunction(trainPath))
 							.attr("stroke", color)
-							.attr("stroke-width", train.train_type * 1.5)
+							.attr("stroke-width", 2)
 							.attr("fill", "none");
 							
 							// debugger;
