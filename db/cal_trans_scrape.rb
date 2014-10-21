@@ -55,9 +55,9 @@ train_table = 'http://www.caltrain.com/schedules/weekdaytimetable.html'
 doc = Nokogiri::HTML(open(train_table))
 nb_data = get_train_times(doc.css(".NB_TT"))
 north_bound_trains = nb_data[0]
-south_bound_trains = nb_data[0]
+# south_bound_trains = nb_data[0]
 
-trains = north_bound_trains.concat(south_bound_trains)
+trains = north_bound_trains#.concat(south_bound_trains)
 stops = nb_data[1]
 #hash-ify
 trains_hash = {}
