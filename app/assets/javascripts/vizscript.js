@@ -41,19 +41,15 @@
 		                          .y(function(d) { return d.y; })
 		                          .interpolate("linear");
 															
-		for(var i = 0; i < 46; i++){//trains.length; i++){
-			console.log(i);
-			// debugger
+		for(var i = 0; i < trains.length; i++){
 			$.ajax({
 				url: "api/trains/" + trains[i].id,
 				type: "GET",
-				// async: false, 
 				success: function(train){
 					var trainPath = [];
 					for(var i = 0; i < train.time_stops.length; i++){
 						if(train.time_stops[i].time){
-							var time = train.time_stops[i].time.slice(11, 16).split(":")
-							console.log(time)
+							var time = train.time_stops[i].time.slice(11, 16).split(":");
 							var timeCoord = (parseInt(time[0]) )  * 6 
 							if(timeCoord/6 < 4){
 								timeCoord += 12 * 6;
@@ -64,7 +60,6 @@
 											"x": timeCoord * w / (21 * 6) + xoffset,
 											"y": train.time_stops[i].stop_id * h/stops.length + yoffset
 										});
-										// debugger;
 						}
 					}
 					if(trainPath.length > 1){
@@ -89,7 +84,8 @@
 			 .attr("x", 0)
 			 .attr("y", function(d){return d.id *  h/stops.length-0.2 * h/stops.length})
        .attr("fill", "gray")
-			 .attr("stroke", "gray");
+			 .attr("stroke", "gray")
+			 .style("font-size", 12);
 			 
 		
 		var lineFunction = d3.svg.line()
@@ -101,8 +97,26 @@
 		var xoffset = 100;
 		var yoffset = 20;
 		
+		//zones
+		var zone_ids = [[0, 5, "#eee"], 
+										[5, 13, "#ccc"],
+										[13, 20, "#aaa"],
+										[20, 26, "#999"],
+										[26, 28, "#777"],
+										[28, 30, "#555"]];
+										
+		svg.selectAll("rect").data(zone_ids).enter().append("rect")
+				.attr("x", that.xoffset)
+				.attr("y", function(d){return d[0] * h/stops.length + that.xoffset/5})
+				.attr("width", w - that.xoffset)
+				.attr("height", function(d){
+					return ((d[1] - d[0]) * h/stops.length)
+				})
+				.attr("fill", function(d){ 
+					// debugger;
+					return d[2]});
+
 		for(var i = 0; i <= stops.length; i++){
-			// console.log(stops[i]);
 			var widthLine = [
 					{"x": xoffset, "y": h/stops.length * i + yoffset}, 
 					{"x": w, "y": h/stops.length * i+ yoffset}
@@ -134,8 +148,9 @@
 				}
 				svg.append("text")
 					 .attr({"x": xoffset + i * (w-xoffset)/ (21 * 6), "y": 15})
-	         .attr("fill", "gray")
+					 .attr("fill", "gray")
 					 .attr("stroke", "gray")
+					 .style("font-size", 15)
 					 .text(content);
 					 
 			}
