@@ -1,1 +1,8 @@
 ==  Visualization Data Server	
+
+
+Rails server for displaying visualization of data. Generally a sandbox for toying around with different things. The main thing living on here right now is a d3 "app" that shows the cal tran train schedule for weekdays. 
+
+Cal tran implementation notes:
+
+The biz logic for is in pure d3 and vanilla js, which is stored in the js assets. The two main features that we desire for this app right now are zoom, and interactivity. Finally the color scheme needs to be reworked, probably the most logical way would be to follow that of the cal tran system. 
