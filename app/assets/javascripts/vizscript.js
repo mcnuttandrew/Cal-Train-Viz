@@ -23,19 +23,19 @@
 	
 	var tableHeight = 400;
 	var fullHeight = 700;
-	var width = 800;
-	
+	var tableWidth = 800;
+	var fullWidth = 1159;
 
 	
 	
 	var buildGraphic = function(ctx, stops, trains){
-		var w = width;
+		var w = tableWidth;
 		var h = tableHeight;
 		var svg = d3.select(".d3canvas")
 								.append("svg")
-								.attr({"width": w, "height": fullHeight})
+								.attr({"width": fullWidth, "height": fullHeight})
 								.append("g");
-		buildGrid(svg, h, w, stops);			
+		buildGrid(svg, h, w, stops);
 		$.ajax({
 			url: "api/trains/1",
 			type: "GET",
@@ -44,6 +44,39 @@
 			}
 		})
 		buildTrainRoutes(svg, h, w, trains, stops);		
+		buildSidebar(svg, h, w);			
+	}
+	
+	var buildSidebar = function(svg, h, w){
+		svg.append("rect")
+				.attr("y", 3).attr("x", tableWidth + 10)
+				.attr('width', fullWidth - w -15).attr('height', fullHeight-3)
+				.attr('stroke', 'black').attr('fill', 'white');
+		
+		var trainTypes = [["blue", "baby bullet"], ["red", "limited stop"], ["gray", "local"]]
+		svg.append("text")
+				.attr("y", 70).attr("x", tableWidth + 30)
+				.attr("font-size", 50)
+				.attr("fill", "black").attr("stroke", "black")
+				.text("CALTRAN:")
+		svg.append("text")
+				.attr("y", 120).attr("x", tableWidth + 30)
+				.attr("font-size", 50)
+				.attr("fill", "black").attr("stroke", "black")
+				.text("WEEKDAYS")		
+				
+				
+		for(var i = 0; i < trainTypes.length; i++){
+			svg.append("rect")
+					.attr("y", 150 + 50 * i).attr("x", tableWidth + 30)
+					.attr('width', 300).attr('height', 30)
+					.attr('fill', trainTypes[i][0]);
+			svg.append("text")
+					.attr("y", 170 + 50 * i).attr("x", tableWidth + 30)
+					.attr("font-size", 38)
+					.attr("fill", "white").attr("stroke", "white")
+					.text(trainTypes[i][1])
+		}				
 	}
 
 	
@@ -73,10 +106,12 @@
 							}
 							timeCoord -= 4 * 6;
 							timeCoord += parseFloat(time[1])/10;
-							this.trainPath.push({
-											"x": timeCoord * w / (21 * 6) + xoffset,
-											"y": train.time_stops[i].stop_id * h/stops.length + yoffset
-										});
+							if(timeCoord < 110){
+								this.trainPath.push({
+												"x": timeCoord * w / (21 * 6) + xoffset,
+												"y": train.time_stops[i].stop_id * h/stops.length + yoffset
+											});
+							}
 						}
 					}
 					
@@ -84,9 +119,9 @@
 					if(this.trainPath.length > 1){
 						var color = "black";
 						if(train.train_type === 2){
-							color = "blue"
+							color = "red"
 						} else if (train.train_type === 3) {
-							color = "#7A0000"
+							color = "blue"
 						}
 						
 						svg.append("path")
@@ -115,6 +150,11 @@
 		                          .x(function(d) { return xScale(d.x); })
 		                          .y(function(d) { return yScale(d.y); })
 		                          .interpolate("linear");
+															
+		svg.append("rect")
+				.attr("y", 3).attr("x", 0)
+				.attr('width', tableWidth).attr('height', h * 1.05)
+				.attr('stroke', 'black').attr('fill', 'white');
 		
 		//draw stop names
 		svg.selectAll("text").data(stops).enter().append("text")
@@ -148,8 +188,10 @@
 					{"x": xoffset + i * (w-xoffset)/ (21 * 6), "y": h * 1.1 - yoffset}
 				];
 			var color = "gray";
+			var thick = '.5'
 			if(i % 6 === 0){
 				color = "black"
+				thick = 1;
 				content = (i / 6 + 4) % 12;
 				///6 to convert to hour, + 4 for offset, %12 to convert to am/pm
 				if((i/6) % 12 === 8){
@@ -162,7 +204,7 @@
 				}
 				//draw time
 				svg.append("text")
-					 .attr({"x": xoffset + i * (w-xoffset)/ (21 * 6), "y": 15})
+					 .attr({"x": xoffset - 5 + i * (w-xoffset)/ (21 * 6), "y": 15})
 					 .attr("fill", "gray")
 					 .attr("stroke", "gray")
 					 .style("font-size", 15)
@@ -172,7 +214,7 @@
 			svg.append("path")
 				.attr("d", lineFunction(heightLine))
 				.attr("stroke", color)
-				.attr("stroke-width", 1)
+				.attr("stroke-width", thick)
 				.attr("fill", "none");
 		}
 	}
@@ -188,7 +230,7 @@
 
 		svg.append("rect")
 				.attr("y", _y).attr("x", 0)
-				.attr('width', width).attr('height', fullHeight - _y)
+				.attr('width', tableWidth).attr('height', fullHeight - _y)
 				.attr('stroke', 'black').attr('fill', 'white');
 		var trainName;	
 		if(train.train_type === 1){
@@ -198,12 +240,12 @@
 		} else {
 			trainName = "baby bullet";
 		}
-		svg.append("text").attr("x", 0).attr("y", _y + 20)
+		svg.append("text").attr("x", 5).attr("y", _y + 20)
 				.attr("fill", "gray").attr("stroke", "gray")
-				.style("font-size", 25).text(train.direction + ' ' + trainName)
+				.style("font-size", 25).text(trainName + ' ' + train.direction)
 				
-		var trainLine = [ {"x": 80, "y": _y + 180}, {"x": 100, "y": _y + 150}, 
-	{"x": 700, "y": _y + 150}, {"x": 720, "y": _y + 120}
+		var trainLine = [ {"x": 30, "y": _y + 180}, {"x": 50, "y": _y + 150}, 
+	{"x": 750, "y": _y + 150}, {"x": 770, "y": _y + 120}
 			];		
 		svg.append("path")
 			.attr("d", lineFunction(trainLine))
@@ -211,10 +253,10 @@
 			.attr("stroke-width", 1)
 			.attr("fill", "none");
 		//iterate across stops
-		var incrementAmount = (600)/train.time_stops.length;
+		var incrementAmount = (700)/train.time_stops.length;
 		for(var i = 1; i < train.time_stops.length; i++){
-					var trainLine = [ {"x": 100 + i * incrementAmount, "y": _y + 155}, 
-					{"x": 100 + i * incrementAmount, "y": _y + 145}];		
+					var trainLine = [ {"x": 50 + i * incrementAmount, "y": _y + 155}, 
+				{"x": 50 + i * incrementAmount, "y": _y + 145}];		
 					svg.append("path")
 						.attr("d", lineFunction(trainLine))
 						.attr("stroke", "black")
@@ -222,28 +264,33 @@
 						.attr("fill", "none");
 					
 					if(train.time_stops[i].time){
-						var xTransTime = 85 + i * incrementAmount;
-						var yTransTime =  _y + 180;
+						var xTransTime = 28 + i * incrementAmount;
+						var yTransTime =  _y + 200;
 						var content = train.time_stops[i].time.split("T")[1].split(":");					
 						var hour = content[0];
 						var minute  = content[1];
+						if(hour < 12){
+							minute = minute + "a";
+						} else {
+							hour = hour - 12;
+							minute = minute + "p";
+						}
 						svg.append("text")
 							 .attr('transform', 'translate(' + xTransTime + ',' + yTransTime + '),rotate(-60)')
 							 .attr("fill", "gray")
 							 .attr("stroke", "gray")
-							 .style("font-size", 10)
+							 .style("font-size", 15)
 							 .text(hour+":"+minute)
 						
 					}
-						var xTransStop = 105 + (i) * incrementAmount ;
-						var yTransStop =  _y + 145;	
-						// debugger;
-						svg.append("text")
-							 .attr('transform', 'translate(' + xTransStop + ',' + yTransStop + '),rotate(-60)')
-							 .attr("fill", "gray")
-							 .attr("stroke", "gray")
-							 .style("font-size", 10)
-							 .text(stops[train.time_stops[i].stop_id].name)	
+					var xTransStop = 60 + (i) * incrementAmount ;
+					var yTransStop =  _y + 145;	
+					svg.append("text")
+						 .attr('transform', 'translate(' + xTransStop + ',' + yTransStop + '),rotate(-60)')
+						 .attr("fill", "gray")
+						 .attr("stroke", "gray")
+						 .style("font-size", 15)
+						 .text(stops[train.time_stops[i].stop_id].name)	
 					
 					
 		}
