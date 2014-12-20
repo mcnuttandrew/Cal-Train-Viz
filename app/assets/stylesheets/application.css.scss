@@ -13,4 +13,11 @@
  *= require_tree .
  *= require_self
  */
+ 
+ 
+ .visBlock {
+   border: thin solid red;
+ }
+ 
+ 
 @import "bootstrap"

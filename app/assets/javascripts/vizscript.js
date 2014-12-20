@@ -6,31 +6,46 @@
 			async: false,
 			success: function(trains){
 				that.trains = trains
+				$.ajax({
+					url: "api/stops",
+					type: "GET",
+					async: false,
+					success: function(stops){
+						that.stops = stops
+						buildGraphic(ctx, that.stops, that.trains);
+					}
+				})
 			}
 		})
-		$.ajax({
-			url: "api/stops",
-			type: "GET",
-			async: false,
-			success: function(stops){
-				that.stops = stops
-			}
-		})
-		buildGraphic(ctx, this.stops, this.trains);
+		
+
 	}
 	
-	var buildGraphic = function(ctx, stops, trains){
-		var w = 800;
-		var h = 400;
-		var svg = d3.select(".d3canvas")
-								.append("svg")
-								.attr({"width": w, "height": h})
-								.append("g");
-		buildGrid(svg, h, w, stops);			
-		buildTrainRoutes(svg, h, w, trains, stops);	
+	var tableHeight = 400;
+	var fullHeight = 700;
+	var width = 800;
+	
 
 	
+	
+	var buildGraphic = function(ctx, stops, trains){
+		var w = width;
+		var h = tableHeight;
+		var svg = d3.select(".d3canvas")
+								.append("svg")
+								.attr({"width": w, "height": fullHeight})
+								.append("g");
+		buildGrid(svg, h, w, stops);			
+		$.ajax({
+			url: "api/trains/1",
+			type: "GET",
+			success: function(train){
+				buildExpandedRoute(h, w, svg, stops, train)
+			}
+		})
+		buildTrainRoutes(svg, h, w, trains, stops);		
 	}
+
 	
 	var buildTrainRoutes = function(svg, h, w, trains, stops){
 		var xScale = d3.scale.linear().domain([0, w]).range([0, w]);
@@ -46,7 +61,9 @@
 				url: "api/trains/" + trains[i].id,
 				type: "GET",
 				success: function(train){
-					var trainPath = [];
+					var _that = this;
+					this.train =  train
+					this.trainPath = [];
 					for(var i = 0; i < train.time_stops.length; i++){
 						if(train.time_stops[i].time){
 							var time = train.time_stops[i].time.slice(11, 16).split(":");
@@ -56,14 +73,15 @@
 							}
 							timeCoord -= 4 * 6;
 							timeCoord += parseFloat(time[1])/10;
-							trainPath.push({
+							this.trainPath.push({
 											"x": timeCoord * w / (21 * 6) + xoffset,
 											"y": train.time_stops[i].stop_id * h/stops.length + yoffset
 										});
 						}
 					}
+					
 					//train coloring and drawing
-					if(trainPath.length > 1){
+					if(this.trainPath.length > 1){
 						var color = "black";
 						if(train.train_type === 2){
 							color = "blue"
@@ -72,15 +90,22 @@
 						}
 						
 						svg.append("path")
-							.attr("d", lineFunction(trainPath))
+							.attr("d", lineFunction(this.trainPath))
 							.attr("stroke", color)
 							.attr("stroke-width", 1)
-							.attr("fill", "none");
+							.attr("fill", "none")
+							.on('click', function(d){ buildExpandedRoute(h, w, svg, stops, _that.train)})
+							.on('mouseenter', function(d){ this.setAttribute('stroke-width', 2)})
+							.on('mouseleave', function(d){ this.setAttribute('stroke-width', 1)});
+							
 					}
 				}
 			})
 
 		}
+		
+		
+		
 	}
 	
 	var buildGrid = function(svg, h, w, stops){		
@@ -101,40 +126,15 @@
        .attr("fill", "gray")
 			 .attr("stroke", "gray")
 			 .style("font-size", 10);
-			 
-
-	 h/stops.length * i + yoffset
-
-															
-															
-		var xoffset = 100;
-		var yoffset = 20;
-		
-		//zones "data"
-		var zone_ids = [[0, 5, "#eee"], 
-										[5, 13, "#ccc"],
-										[13, 20, "#aaa"],
-										[20, 26, "#999"],
-										[26, 28, "#777"],
-										[28, 30, "#555"]];
-		//draw zones								
-		svg.selectAll("rect").data(zone_ids).enter().append("rect")
-				.attr("x", xScale(that.xoffset))
-				.attr("y", function(d){
-					return yScale(d[0] * h / stops.length + that.xoffset / 5)
-				})
-				.attr("width", xScale(w - that.xoffset))
-				.attr("height", function(d){
-					return yScale((d[1] - d[0]) * h/stops.length)
-				})
-				.attr("fill", function(d){ return d[2]});
-					
-		//horitzontal lines
+			
+		// //horitzontal lines
 		for(var i = 0; i <= stops.length; i++){
+			
 			var widthLine = [
-					{"x": xoffset, "y": h/stops.length * i + yoffset}, 
-					{"x": w, "y": h/stops.length * i+ yoffset}
+					{"x": xoffset, "y": h / stops.length * i + yoffset}, 
+					{"x": w, "y": h / stops.length * i + yoffset}
 				];
+				// debugger;
 			svg.append("path")
 				.attr("d", lineFunction(widthLine))
 				.attr("stroke", "black")
@@ -176,6 +176,80 @@
 				.attr("fill", "none");
 		}
 	}
+	
+	var buildExpandedRoute = function(h, w, svg, stops, train){
+		var _y = tableHeight * 1.1;
+		var xScale = d3.scale.linear().domain([0, w]).range([0, w]);
+		var yScale = d3.scale.linear().domain([h, 0]).range([h, 0]);
+		var lineFunction = d3.svg.line()
+		                          .x(function(d) { return xScale(d.x); })
+		                          .y(function(d) { return yScale(d.y); })
+		                          .interpolate("linear");
+
+		svg.append("rect")
+				.attr("y", _y).attr("x", 0)
+				.attr('width', width).attr('height', fullHeight - _y)
+				.attr('stroke', 'black').attr('fill', 'white');
+		var trainName;	
+		if(train.train_type === 1){
+			trainName = "local";
+		} else if (train.train_type === 2){
+			trainName = "limited stop";
+		} else {
+			trainName = "baby bullet";
+		}
+		svg.append("text").attr("x", 0).attr("y", _y + 20)
+				.attr("fill", "gray").attr("stroke", "gray")
+				.style("font-size", 25).text(train.direction + ' ' + trainName)
+				
+		var trainLine = [ {"x": 80, "y": _y + 180}, {"x": 100, "y": _y + 150}, 
+	{"x": 700, "y": _y + 150}, {"x": 720, "y": _y + 120}
+			];		
+		svg.append("path")
+			.attr("d", lineFunction(trainLine))
+			.attr("stroke", "black")
+			.attr("stroke-width", 1)
+			.attr("fill", "none");
+		//iterate across stops
+		var incrementAmount = (600)/train.time_stops.length;
+		for(var i = 1; i < train.time_stops.length; i++){
+					var trainLine = [ {"x": 100 + i * incrementAmount, "y": _y + 155}, 
+					{"x": 100 + i * incrementAmount, "y": _y + 145}];		
+					svg.append("path")
+						.attr("d", lineFunction(trainLine))
+						.attr("stroke", "black")
+						.attr("stroke-width", 1)
+						.attr("fill", "none");
+					
+					if(train.time_stops[i].time){
+						var xTransTime = 85 + i * incrementAmount;
+						var yTransTime =  _y + 180;
+						var content = train.time_stops[i].time.split("T")[1].split(":");					
+						var hour = content[0];
+						var minute  = content[1];
+						svg.append("text")
+							 .attr('transform', 'translate(' + xTransTime + ',' + yTransTime + '),rotate(-60)')
+							 .attr("fill", "gray")
+							 .attr("stroke", "gray")
+							 .style("font-size", 10)
+							 .text(hour+":"+minute)
+						
+					}
+						var xTransStop = 105 + (i) * incrementAmount ;
+						var yTransStop =  _y + 145;	
+						// debugger;
+						svg.append("text")
+							 .attr('transform', 'translate(' + xTransStop + ',' + yTransStop + '),rotate(-60)')
+							 .attr("fill", "gray")
+							 .attr("stroke", "gray")
+							 .style("font-size", 10)
+							 .text(stops[train.time_stops[i].stop_id].name)	
+					
+					
+		}
+	}
+	
+	
 	///run the method
 	var that = this;
 	setTimeout(function(){
@@ -188,4 +262,3 @@
 	}, 100)
 	
 })()
-

@@ -7,7 +7,7 @@ gem 'jquery-rails'
 gem "newrelic_rpm"
 gem 'rails', '4.1.5'
 gem 'sass-rails', '~> 4.0.3'
-gem 'pg'
+gem 'sqlite3'
 gem 'uglifier', '>= 1.3.0'
 
 gem 'sdoc', '~> 0.4.0',          group: :doc
@@ -26,4 +26,3 @@ gem 'binding_of_caller',        group: :development
 
 # Use debugger
 # gem 'debugger', group: [:development, :test]
-
