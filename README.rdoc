@@ -7,3 +7,4 @@ Cal tran implementation notes:
 
 The biz logic for is in pure d3 and vanilla js, which is stored in the js assets.
 The main todo on this project is now setting up a notion of current train.
+There appears to be an error with the times, see ref with the short train in the middle of the day.

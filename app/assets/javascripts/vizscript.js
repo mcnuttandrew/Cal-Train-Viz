@@ -269,7 +269,7 @@
 						var content = train.time_stops[i].time.split("T")[1].split(":");					
 						var hour = content[0];
 						var minute  = content[1];
-						if(hour < 12){
+						if(hour <= 12){
 							minute = minute + "a";
 						} else {
 							hour = hour - 12;
